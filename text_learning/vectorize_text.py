@@ -45,13 +45,22 @@ for name, from_person in [("sara", from_sara), ("chris", from_chris)]:
             email = open(path, "r")
 
             ### use parseOutText to extract the text from the opened email
+            text_string = parseOutText(email)
 
             ### use str.replace() to remove any instances of the words
             ### ["sara", "shackleton", "chris", "germani"]
+            for word in text_string.split():
+              if word.strip() in {"sara", "shackleton", "chris", "germani"}:
+                text_string = text_string.replace(word, "")
 
             ### append the text to word_data
+            word_data.append(text_string)
 
             ### append a 0 to from_data if email is from Sara, and 1 if email is from Chris
+             if name == 'sara': 
+               from_data.append(0) 
+             elif name == 'chris': 
+               from_data.append(1)
 
 
             email.close()
@@ -63,10 +72,27 @@ from_chris.close()
 pickle.dump( word_data, open("your_word_data.pkl", "w") )
 pickle.dump( from_data, open("your_email_authors.pkl", "w") )
 
-
-
-
-
 ### in Part 4, do TfIdf vectorization here
+rom sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import stopwords
+sw = stopwords.words("english")
 
+vec = TfidfVectorizer(stop_words=sw)
+train_data_features = vec.fit_transform(word_data)
+print "TFIDF***"
+names = vec.get_feature_names()
+print len(names)
+print names[34597]
 
+#meaningful_list = []
+#for text in word_data:
+#      meaningful_words = [w.strip() for w in text.split() if not w in sw]
+#          meaningful_list.append(" ".join(meaningful_words))
+#
+#vec2 = TfidfVectorizer()
+#train_data_features2 = vec2.fit_transform(meaningful_list)
+#names2 = vec2.get_feature_names()
+#idf = vec2._tfidf.idf_
+#print "Filtered words data", len(names2)
+
+#Had to convert the data to unix format using the command: find . -type f -exec dos2unix {} \;
