@@ -31,6 +31,7 @@ plt.show()
 
 ### your code here!  name your classifier object clf if you want the 
 ### visualization code (prettyPicture) to show you the decision boundary
+
 from sklearn.ensemble import BaggingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -42,48 +43,62 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
+def adaboost():
+    return ("AdaBoost", AdaBoostClassifier(n_estimators=50, learning_rate=0.5, algorithm = 'SAMME'))
+
+def random_forest():
+    return ("RandomForest", RandomForestClassifier(n_estimators=100))
+
+def decision_tree():
+    return ("DecisionTree", tree.DecisionTreeClassifier(min_samples_split=40))
+
+def gaussian():
+    return ("Gaussian", GaussianNB())
+
+def svm():
+    #return SVC(kernel = 'rbf', C=0.9, gamma = 10.0)  #Gives accuracy of 0.936
+    return ("SVC", SVC(kernel = 'rbf', C=0.85, gamma = 11.0, coef0 = 5, tol=0.00000001, probability=True))
+
+def kneighbors():
+    return ("K Neighbors BaggingClassifier", BaggingClassifier(KNeighborsClassifier(),
+                            max_samples=0.6))
+
 def getClassifier(k):
-    if k == 0:
-        print "Choosing Adaboost classifier"
-        return AdaBoostClassifier(n_estimators=50, learning_rate=0.5, algorithm = 'SAMME')
-    elif k == 1:
-        print "Choosing Random Forest classifier"
-        return RandomForestClassifier(n_estimators=100)
-    elif k == 2:
-        print "Choosing Decision Tree"
-        return tree.DecisionTreeClassifier(min_samples_split=40)
-    elif k == 3:
-        print "Choosing Gaussian Naive Bayes"
-        return GaussianNB()
-    elif k == 4:
-        print "Choosing SVM"
-        #return SVC(kernel = 'rbf', C=0.9, gamma = 10.0)  #Gives accuracy of 0.936
-        return SVC(kernel = 'rbf', C=0.85, gamma = 11.0, coef0 = 5, tol=0.00000001, probability=True)
-    else:
-        print "Choosing K Neighbors classifier"
-        return BaggingClassifier(KNeighborsClassifier(),
-                            max_samples=0.6)
+    options = { 0: adaboost,
+                1: random_forest,
+                2: decision_tree,
+                3: gaussian,
+                4: svm
+    }
+    try:
+        clf = options[k]()
+        return clf
+    except:
+        return kneighbors()
 
-print "Features: ",  len(features_train[0])
+def accuracy_scores():
+    accuracy_scores = []
+    for idx in range(0,6):
+        name, classifier = getClassifier(idx)
+        classifier = classifier.fit(features_train, labels_train)
+        labels_pred = classifier.predict(features_test)
+        accuracy_scores.append((idx, accuracy_score(labels_test, labels_pred)))
+    return accuracy_scores
 
-import sys
-classifier_type = 0
-if len(sys.argv) > 1:
-    classifier_type = int(sys.argv[1])
-else:
-    print "Choosing default classifier type\n"
-clf = getClassifier(classifier_type)
+def max_accuracy_classifier():
+    import operator
+    accuracy_algorithms = accuracy_scores()
+    print accuracy_algorithms
+    return max((accuracy_algorithms), key=operator.itemgetter(1))
 
-clf = clf.fit(features_train, labels_train)
-labels_pred = clf.predict(features_test)
-
-acc = accuracy_score(labels_test, labels_pred)
-
-#scores = cross_val_score(clf, features_train, labels_train)
-#mean = scores.mean()
-print "Acc: ", acc
+print "Features count: ",  len(features_train[0])
+max_acc_idx, max_acc_score = max_accuracy_classifier()
+max_acc_name, max_acc_clf =  getClassifier(max_acc_idx)
+print "Max accuracy classifier", max_acc_name, max_acc_score
 
 try:
-    prettyPicture(clf, features_test, labels_test)
+    max_acc_clf.fit(features_train, labels_train)
+    print "Creating pretty picture"
+    prettyPicture(max_acc_clf, features_test, labels_test)
 except NameError:
     pass
